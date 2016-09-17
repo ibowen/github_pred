@@ -9,8 +9,8 @@ import sys
 
 
 class Repositories:
-    USERNAME = 'mingchen7'
-    PASSWORD = 'cm890719'
+    USERNAME = ''
+    PASSWORD = ''
     SECONDS_ONE_YEAR = 365 * 24 * 3600
     STAR_THRESHOLD = 100    
     NUM_REPOS = 0    
