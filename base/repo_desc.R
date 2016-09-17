@@ -46,9 +46,15 @@ ggplot(data, aes(x=updated_at_date)) +
 
 # GRAPH 4
 # scatter plot of stars vs created_at
-# plot(data$created_at_date, data$stars)
+plot(data$created_at_date, data$stars)
 plot(data$updated_at_date, data$stars, xlab="updated_at", ylab="Number of Stars", 
      main="Trend of stars based on most recent update_at date", ylim = c(0,5000), col="red")
+
+# filter 
+# get repos with updates in the last month
+most_recent_point <-as.Date('2016-08-01')
+filtered <- data[which(data$updated_at_date > most_recent_point),]
+nrow(filtered)
 
 
 
