@@ -22,13 +22,13 @@ django,Django,https://github.com/django
 docker,Docker,https://github.com/docker
 nodejs,Node.js foundation,https://github.com/nodejs
 npm,NPM,https://github.com/npm
-blvc,Berkeley Vision and Learning Center,https://github.com/BVLC
+BVLC,Berkeley Vision and Learning Center,https://github.com/BVLC
 cloudera,Cloudera,https://github.com/cloudera
 databricks,Databricks,https://github.com/databricks
 oracle,Oracle,https://github.com/oracle
 mysql,MySQL,https://github.com/mysql
 d3,D3,https://github.com/d3
-openaddress,OpenAddress,https://github.com/openaddresses
+openaddresses,OpenAddress,https://github.com/openaddresses
 emberjs,Ember.js,https://github.com/emberjs
 ValveSoftware,ValveSoftware,https://github.com/ValveSoftware
 ansible,Ansible,https://github.com/ansible

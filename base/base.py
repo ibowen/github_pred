@@ -14,12 +14,9 @@ import re
 
 class Base:    
     TOKEN = ''
-    SECONDS_ONE_YEAR = 365 * 24 * 3600
-    STAR_THRESHOLD = 100    
-    NUM_REPOS = 0    
-
-    def __init__(self):
-       # logging.basicConfig(filename = self.LOG_FILE, level = logging.DEBUG)
+    
+    def __init__(self, token):
+        self.TOKEN = token       
         pass
 
     def github_request(self, params, headers, per_page=30, page=1, show_header=False, show_body=False, next_page=True):
@@ -107,6 +104,20 @@ class Base:
 
         return total_pages
 
+    def get_public_organizations(self):
+        headers = {'Authorization' : 'token {}'.format(self.TOKEN)}
+        # GET /organizations
+        params = ['organizations']                
+        self.github_request(params, headers, per_page=100, show_body=True, show_header=True)
+
+
+class RepositoryManager:
+    TOKEN = ''
+    SECONDS_ONE_YEAR = 365 * 24 * 3600        
+
+    def __init__(self, token):
+        self.TOKEN = token
+
     def sample_repo(self):
         g = Github(login_or_token=self.USERNAME, password=self.PASSWORD, per_page=30)        
         with open('repositories.csv', 'ab') as f:
@@ -137,15 +148,38 @@ class Base:
 
                 except GithubException:
                     print "Unknwon Exception occurred, skip on this one."                    
-                    continue
+                    continue    
 
-    def get_organizations(self):
-        headers = {'Authorization' : 'token {}'.format(self.TOKEN)}
-        # GET /organizations
-        params = ['organizations']                
-        self.github_request(params, headers, per_page=100, show_body=True, show_header=True)        
-        
+    def load_organizaitons(self):
+        orgs = []
+        with open('organizations-list.csv', 'rb') as f:
+            reader = csv.reader(f)
+            for line in reader:
+                orgs.append(line[0])
+
+        return orgs
+
+    def get_org_repos(self):
+        orgs = self.load_organizaitons()
+        g = Github(login_or_token=self.TOKEN, per_page=100)
+        with open('repos.csv','wb') as f:
+            now = datetime.datetime.now()
+
+            writer = csv.writer(f)
+            writer.writerow(['org_id','repo_id','name','full_name','fork','forks_count','size','has_issues','has_wiki', \
+                                'language','stargazers_count','watchers_count','created_at','updated_at'])            
+            for org in orgs:            
+                organization = g.get_organization(org)
+                for repo in organization.get_repos():
+                    print repo.id, repo.name
+                    if repo.stargazers_count > 100 and (now - repo.updated_at).total_seconds > self.SECONDS_ONE_YEAR / 12:
+                            writer.writerow([org, repo.id, repo.name, repo.full_name, repo.fork, repo.forks_count, repo.size, repo.has_issues, repo.has_wiki, \
+                                repo.language, repo.stargazers_count, repo.watchers_count, repo.created_at, repo.updated_at])
+
+                            time.sleep(0.5)
+                            
 
 
-if __name__ == '__main__':    
-    Base().get_organizations()
+if __name__ == '__main__':
+    access_token = '996443c69383bc84ed89859141a39b9f32737c1a'
+    RepositoryManager(access_token).get_org_repos()
