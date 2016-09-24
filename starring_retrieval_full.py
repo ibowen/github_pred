@@ -22,11 +22,13 @@ def github_request(params, headers, per_page=30, page=1, show_head=False, show_b
     """
     url = "https://api.github.com/" + '/'.join(params) + '?per_page={}&page={}'.format(per_page, page)
     logging.debug('requesting: ' + url)
+    print 'requesting: ' + url
 
     try:
         response = requests.get(url, headers=headers) # get response
     except:
-        logging.logger.exception()
+        logging.exception('Got exception on requesting' + url)
+        raise
     if show_body:
         # body
         logging.debug(json.dumps(response.json(), indent=1))
@@ -42,6 +44,7 @@ def github_request(params, headers, per_page=30, page=1, show_head=False, show_b
             json.dump(response.json(), jsonfile)
 
     logging.debug('total records of this request: {}'.format(len(response.json())))
+    print 'total records of this request: {}'.format(len(response.json()))
     return response.headers['Status'], response.json()
 
 def dump_mongo(db_url, db_name, params, headers):
@@ -66,12 +69,14 @@ def dump_mongo(db_url, db_name, params, headers):
         try:
             mongodb[collection_name].insert(json_body)
         except:
-            logging.logger.exception()
+            logging.exception('Got exception on inserting mongodb')
+            raise
         page += 1
         time.sleep(1)
     mongocli.close() # close connection
     elapsed_time = time.time() - start_time
     logging.debug('completed: {}'.format(elapsed_time))
+    print 'completed: {}'.format(elapsed_time)
 
 def main():
 
@@ -82,16 +87,16 @@ def main():
     headers = {'Authorization' : 'token {}'.format(ACCESS_TOKEN),'Accept' : 'application/vnd.github.v3.star+json'}
 
     # construct repo params for api
-    repos = pd.read_csv('./data/repos.csv')
+    repos = pd.read_csv('./data/repos-with-homepage.csv')
     repo_portfolio = repos[['org_id', 'name']]
     starring_list = []
     for _, row in repo_portfolio.iterrows():
         starring_list.append(['repos', row['org_id'], row['name'], 'stargazers'])
     # start retrieving
     for starring in starring_list:
+        print 'start requesting: {}/{}'.format(starring[1], starring[2])
         logging.debug(starring)
         dump_mongo(db_url,db_name,starring,headers)
-        break
 
 if __name__ == '__main__':
     main()
