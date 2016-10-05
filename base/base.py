@@ -33,6 +33,7 @@ class Base:
 
         url = "https://api.github.com/" + '/'.join(params) + '?per_page={}&page={}'.format(per_page, page)        
         response = requests.get(url, headers=headers) # get response
+        links = []
 
         if response.headers['Status'] == '200 OK':                        
             if show_body:            
@@ -46,15 +47,18 @@ class Base:
                         links = self.parse_link(v)                    
                 print '------------------------------------'
 
-            filename = '.'.join(params) + '.json'
-            self.write_json(filename, response.json())
+            # filename = '.'.join(params) + '.json'
+            # self.write_json(filename, response.json())
             total_pages = 1            
-
-            print links
+            
             if next_page and ('next' in links):                
                 total_pages = self.process_pages(links, filename)
             
-            print "Total pages = %d" % total_pages        
+            # print "Total pages = %d" % total_pages
+            return response.json()
+
+        else:
+            return None
 
     def parse_link(self, link_str):
         links = {}
@@ -98,101 +102,23 @@ class Base:
                 print total_pages
                 print links
 
-
             elif response.headers['Status'] == '403 Forbidden':
                 break;
 
         return total_pages
 
+    # GET /organizations
     def get_public_organizations(self):
         headers = {'Authorization' : 'token {}'.format(self.TOKEN)}
-        # GET /organizations
+        
         params = ['organizations']                
         self.github_request(params, headers, per_page=100, show_body=True, show_header=True)
 
+    # GET /users/:username
+    def get_user(self, username):
+        headers = {'Authorization' : 'token {}'.format(self.TOKEN)}
+        params = ['users', username]
+        response = self.github_request(params, headers, per_page=30, show_body=False, show_header=False)
+        return response
 
-class RepositoryManager:
-    TOKEN = ''
-    SECONDS_ONE_YEAR = 365 * 24 * 3600        
-
-    def __init__(self, token):
-        self.TOKEN = token
-
-    def sample_repo(self):
-        g = Github(login_or_token=self.USERNAME, password=self.PASSWORD, per_page=30)        
-        with open('repositories.csv', 'ab') as f:
-            writer = csv.writer(f)
-            now = datetime.datetime.now()
-            for repo in g.get_repos():
-                try:
-                    print repo.id, repo.name, repo.stargazers_count, repo.created_at.strftime("%Y-%m-%d %H:%M:%S"), repo.updated_at.strftime("%Y-%m-%d %H:%M:%S"), 
-                    writer.writerow([repo.id, repo.name, repo.stargazers_count, repo.created_at, repo.updated_at])                    
-                    # if repo.stargazers_count > self.STAR_THRESHOLD and (now - repo.updated_at).total_seconds > self.SECONDS_ONE_YEAR / 4:
-                    #     writer.writerow([repo.id, repo.name, repo.stargazers_count, repo.created_at, repo.updated_at])                    
-                    #     self.NUM_REPOS = self.NUM_REPOS + 1
-                    #     # logging.debug(self.NUM_REPOS)
-                    #     print self.NUM_REPOS
-
-                    # if self.NUM_REPOS > 1000:
-                    #     break
-
-                    time.sleep(1)
-
-                except BadCredentialsException:
-                    print "BadCredentialException occurred..."
-                    sys.exit(1)
-
-                except RateLimitExceededException:
-                    print "RateLimitExceedException occurred..."                    
-                    continue                
-
-                except GithubException:
-                    print "Unknwon Exception occurred, skip on this one."                    
-                    continue    
-
-    def load_organizaitons(self):
-        orgs = []
-        with open('organizations-list.csv', 'rb') as f:
-            reader = csv.reader(f)
-            for line in reader:
-                orgs.append(line[0])
-
-        return orgs
-
-    def get_org_repos(self):
-        orgs = self.load_organizaitons()
-        g = Github(login_or_token=self.TOKEN, per_page=100)
         
-        with open('repos.csv','wb') as f:
-            now = datetime.datetime.now()
-
-            writer = csv.writer(f)
-            writer.writerow(['org_id','repo_id','name','full_name','fork','forks_count','size','has_issues','has_wiki', \
-                                'language','stargazers_count','watchers_count','created_at','updated_at','homepage'])            
-            for org in orgs:
-                try:            
-                    organization = g.get_organization(org)
-                    for repo in organization.get_repos():
-                        print repo.id, repo.name, repo.homepage
-                        if repo.fork == False and repo.stargazers_count > 100 and (now - repo.updated_at).total_seconds > self.SECONDS_ONE_YEAR / 12:
-                                writer.writerow([org, repo.id, repo.name, repo.full_name, repo.fork, repo.forks_count, repo.size, repo.has_issues, repo.has_wiki, \
-                                    repo.language, repo.stargazers_count, repo.watchers_count, repo.created_at, repo.updated_at, repo.homepage])
-
-                                # time.sleep(0.5)
-
-                except RateLimitExceededException:
-                    print "RateLimitExceedException occurred..."
-                    time.sleep(1800)                    
-                    continue                
-
-                except BadCredentialsException:
-                    print "BadCredentialException occurred..."
-                    sys.exit(1)
-
-                except GithubException:
-                    print "Unknwon Exception occurred, skip on this one."                    
-                    sys.exit(1)              
-                            
-if __name__ == '__main__':
-    access_token = ''
-    RepositoryManager(access_token).get_org_repos()
