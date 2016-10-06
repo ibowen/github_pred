@@ -15,7 +15,8 @@ def starring_etl(mongodb, coll_name):
     stars_list = [] # init a list to contain query result
     stars = mongodb[coll_name].find({}, {"_id":0, "starred_at": 1, "user.type": 1, "user.id":1, "user.login":1, "user.site_admin":1})
     for star in stars:
-        stars_list.append(coll_name.split('.')[1:3] + [star['starred_at']] + star['user'].values()) # append the flattened row
+        names = coll_name.split('.')
+        stars_list.append([names[1], '.'.join(names[2:-1])] + [star['starred_at']] + star['user'].values()) # append the flattened row
     # construct a dataframe
     stars_df = pd.DataFrame(stars_list, columns=['owner', 'repo', 'starred_at', 'user.login', 'user.site_admin', 'user.type', 'user.id'])
     logging.debug(coll_name)
