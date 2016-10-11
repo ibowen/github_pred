@@ -1,0 +1,6 @@
+.log
+.Rhistory
+*.pyc
+data/
+log/
+
