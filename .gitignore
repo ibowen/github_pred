@@ -1,6 +1,7 @@
 .log
-.Rhistory
+*.Rhistory
 *.pyc
 data/
 log/
+.ipynb_checkpoints/
 
