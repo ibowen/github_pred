@@ -119,6 +119,4 @@ class Base:
         headers = {'Authorization' : 'token {}'.format(self.TOKEN)}
         params = ['users', username]
         response = self.github_request(params, headers, per_page=30, show_body=False, show_header=False)
-        return response
-
-        
+        return response        
